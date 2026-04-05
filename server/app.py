@@ -20,6 +20,15 @@ class StepRequest(BaseModel):
     review: str = Field(..., min_length=1)
 
 
+@app.get("/")
+def home() -> Dict:
+    return {
+        "name": "AI Code Review OpenEnv",
+        "status": "running",
+        "routes": ["/health", "/tasks", "/reset", "/step", "/state"],
+    }
+
+
 @app.get("/health")
 def health() -> Dict:
     return {"status": "ok"}
