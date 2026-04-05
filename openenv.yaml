@@ -1,0 +1,31 @@
+name: ai-code-review-openenv
+description: RL environment for real-world code review with deterministic grading.
+version: 1.0.0
+tags:
+  - openenv
+  - code-review
+  - rl
+entrypoint:
+  module: env.environment
+  class: OpenEnvCodeReviewEnvironment
+api:
+  framework: fastapi
+  app_file: app.py
+  routes:
+    health: /health
+    reset: /reset
+    step: /step
+    state: /state
+observation_model: env.environment.Observation
+action_model: env.environment.Action
+reward_model: env.environment.Reward
+tasks:
+  - id: easy_bug_fix
+    difficulty: easy
+  - id: medium_optimization
+    difficulty: medium
+  - id: hard_refactor_security
+    difficulty: hard
+validation:
+  deterministic_graders: true
+  reward_range: [0.0, 1.0]
