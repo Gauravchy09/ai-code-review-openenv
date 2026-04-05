@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import uvicorn
 
@@ -56,9 +56,10 @@ def list_tasks() -> Dict:
 
 
 @app.post("/reset")
-def reset(payload: ResetRequest) -> Dict:
+def reset(payload: Optional[ResetRequest] = Body(default=None)) -> Dict:
+    task_id = payload.task_id if payload else None
     try:
-        obs = env.reset(task_id=payload.task_id)
+        obs = env.reset(task_id=task_id)
     except KeyError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"observation": obs.model_dump()}
