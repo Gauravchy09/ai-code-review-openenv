@@ -29,6 +29,11 @@ def home() -> Dict:
     }
 
 
+@app.get("/web")
+def web_home() -> Dict:
+    return home()
+
+
 @app.get("/health")
 def health() -> Dict:
     return {"status": "ok"}
