@@ -117,8 +117,8 @@ Required environment variables:
 - `MODEL_NAME`
 - `HF_TOKEN`
 
-Also supported fallback:
-- `OPENAI_API_KEY`
+Optional environment variable:
+- `LOCAL_IMAGE_NAME` (if you use docker-based local image flows)
 
 If no credentials are present, `inference.py` automatically runs in deterministic mock mode to avoid runtime failure.
 

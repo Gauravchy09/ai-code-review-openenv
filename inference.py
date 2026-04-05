@@ -12,25 +12,28 @@ from openai import OpenAI
 from env.environment import Action, OpenEnvCodeReviewEnvironment
 
 
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN")
+# Optional variable for docker-based client flows.
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+
+
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
 def resolve_client() -> tuple[Optional[OpenAI], str, bool, str]:
-    api_base_url = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-    model_name = os.getenv("MODEL_NAME", "gpt-4o-mini")
     mock_mode = os.getenv("MOCK_INFERENCE", "0").strip().lower() in {"1", "true", "yes"}
 
     if mock_mode:
-        return None, model_name, True, "explicit_mock_flag"
+        return None, MODEL_NAME, True, "explicit_mock_flag"
 
-    api_key = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+    if not HF_TOKEN:
+        return None, MODEL_NAME, True, "missing_credentials"
 
-    if not api_key:
-        return None, model_name, True, "missing_credentials"
-
-    client = OpenAI(base_url=api_base_url, api_key=api_key)
-    return client, model_name, False, "api_mode"
+    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    return client, MODEL_NAME, False, "api_mode"
 
 
 def llm_review(client: OpenAI, model_name: str, task_payload: Dict) -> str:
