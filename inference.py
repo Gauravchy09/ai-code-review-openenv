@@ -5,9 +5,14 @@ import os
 import uuid
 from datetime import datetime, timezone
 from statistics import mean
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
-from openai import OpenAI
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except Exception:
+    OpenAI = Any  # type: ignore[assignment]
+    OPENAI_AVAILABLE = False
 
 from env.environment import Action, OpenEnvCodeReviewEnvironment
 
@@ -31,6 +36,9 @@ def resolve_client() -> tuple[Optional[OpenAI], str, bool, str]:
 
     if not HF_TOKEN:
         return None, MODEL_NAME, True, "missing_credentials"
+
+    if not OPENAI_AVAILABLE:
+        return None, MODEL_NAME, True, "missing_openai_dependency"
 
     client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
     return client, MODEL_NAME, False, "api_mode"
@@ -63,6 +71,16 @@ def llm_review(client: OpenAI, model_name: str, task_payload: Dict) -> str:
     )
 
     return response.choices[0].message.content or ""
+
+
+def safe_llm_review(client: OpenAI, model_name: str, task_payload: Dict) -> tuple[str, Optional[str]]:
+    try:
+        review_text = llm_review(client, model_name, task_payload)
+        if review_text.strip():
+            return review_text, None
+        return "", "empty_llm_response"
+    except Exception as exc:
+        return "", f"{type(exc).__name__}: {exc}"
 
 
 def mock_review(task_id: str) -> str:
@@ -137,7 +155,26 @@ def run_baseline() -> Dict:
 
     for task_id in task_ids:
         observation = env.reset(task_id=task_id)
-        review_text = mock_review(task_id) if mock_mode else llm_review(client, model_name, observation.model_dump())
+        task_payload = observation.model_dump()
+
+        if mock_mode:
+            review_text = mock_review(task_id)
+            fallback_reason = None
+        else:
+            review_text, fallback_reason = safe_llm_review(client, model_name, task_payload)
+            if fallback_reason:
+                review_text = mock_review(task_id)
+                log_line(
+                    "WARN",
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": now_iso(),
+                        "task_id": task_id,
+                        "event": "llm_fallback_to_mock",
+                        "reason": fallback_reason,
+                    },
+                )
+
         _, reward, done, info = env.step(Action(review=review_text))
         task_scores[task_id] = reward.total
 
@@ -176,4 +213,13 @@ def run_baseline() -> Dict:
 
 
 if __name__ == "__main__":
-    run_baseline()
+    try:
+        run_baseline()
+    except Exception as exc:
+        log_line(
+            "FATAL",
+            {
+                "timestamp_utc": now_iso(),
+                "error": f"{type(exc).__name__}: {exc}",
+            },
+        )
