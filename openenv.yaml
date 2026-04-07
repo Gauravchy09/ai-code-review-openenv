@@ -22,10 +22,13 @@ reward_model: env.environment.Reward
 tasks:
   - id: easy_bug_fix
     difficulty: easy
+    grader: env.grader.grade_easy
   - id: medium_optimization
     difficulty: medium
+    grader: env.grader.grade_medium
   - id: hard_refactor_security
     difficulty: hard
+    grader: env.grader.grade_hard
 validation:
   deterministic_graders: true
-  reward_range: [0.0, 1.0]
+  reward_range: [0.001, 0.999]

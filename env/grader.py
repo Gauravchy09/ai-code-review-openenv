@@ -7,6 +7,9 @@ from typing import Dict, List
 from .tasks import TaskDefinition
 
 
+SCORE_EPSILON = 1e-3
+
+
 @dataclass(frozen=True)
 class GradeResult:
     total: float
@@ -21,7 +24,7 @@ class GradeResult:
 
 
 def clamp_01(value: float) -> float:
-    return max(0.0, min(1.0, value))
+    return max(SCORE_EPSILON, min(1.0 - SCORE_EPSILON, value))
 
 
 def _normalize(text: str) -> str:

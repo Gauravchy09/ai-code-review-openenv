@@ -25,12 +25,12 @@ class Action(BaseModel):
 
 
 class Reward(BaseModel):
-    total: float = Field(..., ge=0.0, le=1.0)
-    correctness: float = Field(..., ge=0.0, le=1.0)
-    optimization: float = Field(..., ge=0.0, le=1.0)
-    readability: float = Field(..., ge=0.0, le=1.0)
-    formatting: float = Field(..., ge=0.0, le=1.0)
-    penalty: float = Field(..., ge=0.0, le=1.0)
+    total: float = Field(..., gt=0.0, lt=1.0)
+    correctness: float = Field(..., gt=0.0, lt=1.0)
+    optimization: float = Field(..., gt=0.0, lt=1.0)
+    readability: float = Field(..., gt=0.0, lt=1.0)
+    formatting: float = Field(..., gt=0.0, lt=1.0)
+    penalty: float = Field(..., gt=0.0, lt=1.0)
 
 
 class StepInfo(BaseModel):
